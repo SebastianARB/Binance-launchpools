@@ -1,0 +1,58 @@
+name: Binance Radar
+
+on:
+  schedule:
+    - cron: "0,10,20,30,40,50 * * * *"   # automático cada 10 minutos exactos
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Enviar mensaje de prueba a Discord"
+        type: boolean
+        default: false
+
+concurrency:
+  group: binance-radar-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Restaura visto.json para no reenviar lo ya anunciado
+      - name: Restore visto.json (cache)
+        id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: visto.json
+          key: visto-${{ github.ref_name }}-
+          restore-keys: |
+            visto-${{ github.ref_name }}-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run radar
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          TEST_MODE: ${{ github.event.inputs.test }}
+        run: python binance_alertas.py
+
+      # Guarda el visto.json actualizado para la próxima ejecución
+      - name: Save visto.json (cache)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: visto.json
+          key: visto-${{ github.ref_name }}-${{ github.run_id }}
+
+          key: visto-${{ github.ref_name }}-${{ github.run_id }}
