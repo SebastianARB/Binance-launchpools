@@ -2,7 +2,7 @@ name: Binance Radar
 
 on:
   schedule:
-    - cron: "0,10,20,30,40,50 * * * *"   # automático cada 10 minutos exactos
+    - cron: "0,10,20,30,40,50 * * * *"   # cada 10 minutos exactos (UTC)
   workflow_dispatch:
     inputs:
       test:
@@ -34,6 +34,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: visto.json
+          # OJO: una sola 'key' en restore
           key: visto-${{ github.ref_name }}-
           restore-keys: |
             visto-${{ github.ref_name }}-
@@ -53,6 +54,5 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: visto.json
-          key: visto-${{ github.ref_name }}-${{ github.run_id }}
-
+          # OJO: una sola 'key' en save
           key: visto-${{ github.ref_name }}-${{ github.run_id }}
